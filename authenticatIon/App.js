@@ -10,10 +10,8 @@ import Assistant from "./pages/Assistant";
 import Materials from "./pages/Materials";
 import Slides from "./pages/Slides";
 import Videos from "./pages/Videos";
+import Profile from "./pages/Profile";
 import makeAuth from "./doAuth";
-// import Blogs from "./pages/Blogs"; 
-// import Contact from "./pages/Contact"; 
-// import NoPage from "./pages/NoPage"; 
 
 // const AuthContext = createContext(null);
 
@@ -24,13 +22,27 @@ export default function App() {
   const navigate = useNavigate();
 
   const handleLogin = async (name, pass) => {
-    const newToken = await makeAuth(name, pass);
-    if (newToken[0].full_name !== "fail"){
-        setToken(newToken[0].full_name);
-        navigate('/assistant');
+    /* This is a regular expression that matches if a string */
+    /* is NOT a lower/upper case letter or a number */
+    const validLett = /^[a-zA-Z0-9]+$/;
+
+      console.log("handleLogin, name is " + name + " and valid is " + validLett.test(name));
+
+    if (!validLett.test(name)){
+        setToken("fail"); // there is a character that is NOT a-zA-Z0-9 in the name
+    }
+    else if (!validLett.test(pass)){
+        setToken("fail"); //there is a character that is NOT a-zA-Z0-9 in the password
     }
     else{
-        setToken();
+      const newToken = await makeAuth(name, pass);
+      if (newToken[0].full_name !== "fail"){
+        setToken(newToken[0].account);
+        navigate('/assistant1');
+      }
+      else{
+        setToken("fail");
+      }
     }
   };
 
@@ -41,18 +53,30 @@ export default function App() {
   return (
       <AuthContext.Provider value={token}>
        <div className="content">
-        <h1> React Rounter Authenticated </h1>
+        <h1> Computer Science Assistant</h1>
         <Navigation token = {token} onLogout = {handleLogout} />
         <Routes>
-          <Route path="/" element={ <Home onLogin={handleLogin}/>  } />
-          <Route path="/home" element={ <Home onLogin={handleLogin} /> } />
+          <Route path="/" element={ <Home token = {token} onLogin={handleLogin}/>  } />
+          <Route path="/home" element={ <Home token = {token} onLogin={handleLogin} /> } />
           <Route path="/materials/" element={<Materials />}>
             <Route path="slides" element={<Slides />} />
             <Route path="videos" element={<Videos />} />
           </Route>
-          <Route path="/assistant" element={
+          <Route path="/assistant1" element={
               <ProtectedRoute value = {token}>
-                <Assistant /> 
+                <Assistant account={token} aType={"COMP171"} /> 
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/assistant2" element={
+              <ProtectedRoute value = {token}>
+                <Assistant account={token} aType={"COMP210"} /> 
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/profile" element={
+              <ProtectedRoute value = {token}>
+                <Profile /> 
               </ProtectedRoute>
             }
           />
