@@ -16,8 +16,7 @@ const Edit = ( {account, course} ) => {
   const [editFiles, setEditFiles] = useState(false);
   const [addedFiles, setAddedFiles] = useState([]);
   const [addedFilesError, setAddedFilesError] = useState(false);
-  //const [addedContent, setAddedContent] = useState([]);
-  //const [addedSize, setAddedSize] = useState([]);
+  const [addRslt, setAddRslt] = useState(false);
   const [oldName, setOldName] = useState("none");
   const [invalidAN, setInvalidAN] = useState(false);
   const [invalidSN, setInvalidSN] = useState(false);
@@ -97,6 +96,7 @@ const Edit = ( {account, course} ) => {
     setInvalidI(false);
     setDelRslt(false);
     setAddedFilesError(false);
+    setAddRslt(false);
     async function getData(){
        pdata  = await getAttributes(course);
        setOldName(pdata[0].name);
@@ -144,29 +144,13 @@ const Edit = ( {account, course} ) => {
     async function addFiles(){
        const files = document.getElementById("files");
        let rslt  = await addfiles(files, course);
-        //console.log("addFiles got return value: " + rslt);
-        //
-        /* This calls the REST API directly.
-       const formData = new FormData();
-       //formData.append("name", name.value);
-       formData.append("course", course);
-       for(let i =0; i < files.files.length; i++) {
-            formData.append("files", files.files[i]);
+       if (rslt !== "fail"){
+           setAddRslt(true);
        }
-       await fetch('http://20.169.159.21:21960/addfiles', {
-           method: 'POST',
-           body: formData,
-           //headers: { "Content-Type": "multipart/form-data" }
-       })
-        .then((res) => console.log(res))
-        .catch((err) => {
-            console.log("Error occured calling /addfiles" + err);
-            setAddedFilesError(true);
-        })
-        */
     };
 
     const filesToAdd = () => {
+       setAddRslt(false);
        const rslt = document.getElementById("files");
        //console.log("selected files:");
        let tempFiles = [];
@@ -273,14 +257,13 @@ const Edit = ( {account, course} ) => {
        {delRslt && (
          <p> Files deleted! </p>  
        )}
-      {/*
-    <br /> <br />
-    <button className="button" onClick={() => {openFilePicker()} }>Choose files to add</button>
-    */}
        <br /> <br />
-      <div>
-      <h2>Files to add:</h2><br />To Change the chosen list of files, re-choose the files
-      </div>
+       <hr />
+       <br /> <br />
+      <div className="left">
+          <h2>Files to add:</h2>
+          <br />
+          To Change the chosen list of files, re-choose the files
       <br /><br />
       <div className="input_container">
       <label htmlFor="files" className="custom-file-upload">
@@ -289,7 +272,8 @@ const Edit = ( {account, course} ) => {
       <input type="file" name="files" id="files" multiple 
           onChange={filesToAdd}/> 
       </div>
-      <br /><br />
+      </div>
+      <div className="rightpadding">
       <b>Files to add:</b>
       <div>
       {addedFiles.map((file, index) => (<p key={index}>{file}</p>))}
@@ -301,6 +285,10 @@ const Edit = ( {account, course} ) => {
        {addedFilesError && (
          <p> There is a corrupted file! </p>  
        )}
+       {addRslt && (
+         <p> Files successfully uploaded! </p>  
+       )}
+      </div>
      </div>
       )}
   </div>
