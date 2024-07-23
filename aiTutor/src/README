@@ -1,0 +1,9 @@
+Encryption problem:
+
+1.  Can encrypt/decrpyt in React (function handleLogin in App.js) using AES in module crypto-js
+2.  Can encrypt/decrpyt in Node.js (route /auth in app.js)
+3.  But cannot decrpyt in Node.js when given encrpyted value from React.  
+4.  Possible problems:
+    a.  encrypt using AES 32 in React and decode in AES 256 in Node.js?
+    b.  Node.js encrypt uses a random string in the beginning of the decode.  Does React encrypt do this?
+    c.  Format is different.  I think I put the React code into the Node.js format, but need an iv string.

@@ -1,0 +1,27 @@
+{
+  "name": "airest",
+  "version": "1.0.0",
+  "description": "REST API for Course Assistant Website",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "REST",
+    "DB",
+    "genAI",
+    "authentication"
+  ],
+  "author": "IC Assistant Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dompurify": "^3.1.5",
+    "express": "^4.19.2",
+    "formidable": "^3.5.1",
+    "jsdom": "^24.1.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1"
+  }
+}
