@@ -48,7 +48,7 @@ input, textarea {
     color: green;
     background-color: #f3f3f3;
     font-weight: bold;
-    width: 66%;
+    width: 50%;
     float: left;
 }
 
@@ -91,6 +91,10 @@ label {
   font-size: 1.3em;
 }
 
+.right{
+    float: right;
+}
+
 .left{
     float: left;
 }
@@ -101,14 +105,11 @@ label {
     margin-right: 200px;
 }
 
-.right{
-    float: right;
-}
-
 .rightpadding{
     float: right;
     padding-right: 20px;
     margin-right: 200px;
+    margin-bottom: 200px;
 }
 
 .COMP171{
@@ -126,21 +127,38 @@ label {
     background-color: #5E9BC4;
 }
 
-/*
 input[type="file"] {
   display: none;
 }
+/*
+.noinput{
+    display: none;
+}
+*/
 
 .custom-file-upload {
   border: 1px solid #ccc;
   display: inline-block;
   padding: 6px 12px;
   cursor: pointer;
+  background-image: linear-gradient(
+    to right,
+    #ff7a18,
+    #af002d,
+    #319197 100%,
+    #319197 200%
+  );
+  background-position-x: 0%;
+  background-size: 200%;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  text-shadow: 0 1px 1px #333;
+  transition: all 0.25s;
 }
 .input_container {
   border: 1px solid #e5e5e5;
 }
-*/
 /*
 input[type=file]::file-selector-button {
   border: 2px solid #6c5ce7;
@@ -151,6 +169,7 @@ input[type=file]::file-selector-button {
   height: 40px;
 }
 */
+    /*
 input::file-selector-button {
   background-image: linear-gradient(
     to right,
@@ -168,6 +187,7 @@ input::file-selector-button {
   text-shadow: 0 1px 1px #333;
   transition: all 0.25s;
 }
+*/
 input[type=file]::file-selector-button:hover {
   background-position-x: 100%;
   transform: scale(1.1);

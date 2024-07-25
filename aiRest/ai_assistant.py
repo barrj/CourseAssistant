@@ -17,13 +17,15 @@ if len(sys.argv) > 6:
     current_account = sys.argv[4]
     current_course = sys.argv[5]
     current_thread_id = sys.argv[6]
+    current_files = sys.argv[7]
 else:
-    current_quest = "none"
+    current_quest = "How are you?"
     current_thread = "none"
     current_thread_times = 0
     current_account = "none"
     current_course = "COMP171"
     current_thread_id = 0
+    current_files = ""
 
 # Now get the database configuration data
 URL = ""
@@ -147,7 +149,7 @@ rslt = getAttributes(current_course)
 # print(rslt[0])
 # current_assistant = "Jeeves"
 current_assistant = rslt[0][0]
-print(current_assistant)
+print(current_assistant + ":")
 print()
 
 # You should store your materials in a folder in the same directory as this program
@@ -200,7 +202,7 @@ max_times = rslt[0][6]
 # print(temp)
 # print(current_thread)
  
-#-------------------------------- end of variables to change -----------------------------------
+#-------------------------------- end of attributes -----------------------------------
 
 # This variable is used by the program; do not change
 assistant = ""
@@ -305,13 +307,36 @@ if (not "file_search" in assistant.tool_resources) or (not current_store in all_
 # print(vector_store_id)
 # print()
 
-# Prompt the user for their query
-# quest = input("User (enter 'done' to halt):  ").lower()
-# get rid of white space before/after input
-# quest = quest.strip()
-# if (quest == "quit" or quest == "done" or quest == "halt"): 
-    # print("done")
-    # exit(0)
+# extract the image files
+# while True:
+    # Debug statement: print assitant and thread ids to ensure we're calling the correct assistant
+# print("assistant id = " + assistant.id)
+# print("thread id = " + thread.id)
+if current_files: 
+    files = current_files.split(",") 
+    # print("files are:") 
+    # print(files)
+else:
+    files = []
+    # print("ai_assistant, current_files is empty")
+    
+#if len(files) > 0: 
+    #print("ai_assistant, all files received: " + files)
+    #print("ai_assistant, first file received: " + files[0])
+    #print("ai_assistant, length of files is: ")
+    #print(len(files))
+#else:
+    #print("no images sent")
+# create the content for the thread with the user query and any images
+newContent = [{"type":"text", "text":current_quest}]
+if files:
+    for img in files:
+        imgURL = "http://ic-research2.eastus.cloudapp.azure.com/~barr/CSAITutor/aiRest/tmp/" +  img
+        nextImg = {"type":"image_url", "image_url":{"url":imgURL}}
+        newContent.append(nextImg)
+# print("content for thread:")
+# print(newContent)
+# print()
 
 # Create a new conversation thread with the user's initial query
 if current_thread != "none" and current_thread_times < max_times:
@@ -320,22 +345,23 @@ if current_thread != "none" and current_thread_times < max_times:
         message = client.beta.threads.messages.create(
 		    thread_id=thread.id,
 		    role="user",
-		    content=current_quest,
+		    content=newContent,
 	    )
     except openai.NotFoundError as e: 
-        thread = client.beta.threads.create(messages=[{"role": "user", "content": current_quest}])
-        # now update the database for this account
+        #thread = client.beta.threads.create(messages=[{"role": "user", "content": current_quest}])
+        thread = client.beta.threads.create(messages=[{"role": "user", "content": newContent}])
 else: 
-    thread = client.beta.threads.create(messages=[{"role": "user", "content": current_quest}]) 
+    thread = client.beta.threads.create(messages=[{"role": "user", "content": newContent}]) 
     # now update the database for this account
     updateThread(thread.id, current_thread, current_thread_id, current_store, current_account)
 
-# current_thread_times = current_thread_times + 1
+# print("thread message content:")
+# messages = client.beta.threads.messages.list(thread_id=thread.id)
+# message_content = messages.data[0].content
+# print(message_content)
+# print()
 
-# while True:
-    # Debug statement: print assitant and thread ids to ensure we're calling the correct assistant
-# print("assistant id = " + assistant.id)
-# print("thread id = " + thread.id)
+# send the query to ChatGPT and return the answer
 run = client.beta.threads.runs.create_and_poll(
             thread_id=thread.id,
             assistant_id=assistant.id, 
@@ -372,8 +398,9 @@ if run.status == 'completed':
 	print(messages.data[0].content[0].text.value)
 	# print(" ")
 else:
-	print(run.status)
-	# print()
+    print("assistant failed") 
+    print(run.status) 
+    print()
 	# print(run)
 	# print()
 		

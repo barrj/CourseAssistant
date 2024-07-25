@@ -1,7 +1,25 @@
-async function ask(account, aType, quest){
+async function ask(account, aType, quest, files){
     try{
-        const response = await fetch('http://20.169.159.21:21960/ask', {
+
+    const formData = new FormData();
+    formData.append("quest", quest);
+    formData.append("account", account);
+    formData.append("aType", aType);
+    for(let i =0; i < files.files.length; i++) {
+        formData.append("files", files.files[i]);
+        //console.log("doAsk received " + files.files[i].name);
+    }
+        /*
+    console.log("addFiles, listing of FormData:");
+    for (const entry in formData.entries()) {
+      console.log(entry[0], entry[1], entry[2], entry[3]);
+    }
+    */
+
+        const response = await fetch('http://20.169.159.21:21962/ask', {
               method: "post",
+              body: formData,
+            /*
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
@@ -13,6 +31,7 @@ async function ask(account, aType, quest){
                     aType: aType,
                     quest: quest
                 })
+            */
         });
         const ans = await response.json();
         //console.log("doAsk received from server: " + ans);

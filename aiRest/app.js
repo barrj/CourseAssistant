@@ -71,7 +71,7 @@ function createPool(){
 
 // all environments
 //app.set('port', process.env.PORT || 21957);
-const PORT = 21960;
+const PORT = 21962;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -249,7 +249,21 @@ app.post('/update', function(request, response){
   });  // end getConnection
 });  // end /update
 
-app.post('/ask', function(request, response){
+    //function(request, response){
+app.post('/ask', upload.array("files"), function(request, response, next){
+    /*
+    console.log("fields from multer:");
+    console.log(request.fields);
+    console.log("files from multer:");
+    console.log(request.files);
+    if (request.files.length > 0){
+      console.log("name of first file from multer:");
+      console.log(request.files[0].originalname);
+    }
+    else{
+     console.log("no image files found");
+    }
+    */
     const account = request.body.account;
     const aType = request.body.aType;
     const quest = request.body.quest;
@@ -258,13 +272,14 @@ app.post('/ask', function(request, response){
     let thread_tid = 0;
     //q = "SELECT thread, thread_times FROM Student WHERE account ='" + account + "';";
 
-    // check to see if the pool still exists
+    // check to see if the DB pool still exists
     if (!pool){
         createPool();
     }
 
-  pool.getConnection(function(err, connection){
-    if (err) {
+    // get a connection to the DB from the pool
+    pool.getConnection(function(err, connection){
+      if (err) {
         // connection.release();
         throw err;
     }
@@ -304,14 +319,51 @@ app.post('/ask', function(request, response){
             response.header("Access-Control-Allow-Origin", "*");
             response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             response.writeHead(200, { 'Content-Type': 'application/json'});
-            // no thread exists yet for this account/course combination
-            /* Found a thread, now send the thread and question to the openai assistant */
 
-           /* now ask the assistant for an answer; need to check the question first */
+       /* Now move the images that were uploaded to the /tmp file
+        * and create an array of image names for the ai_assistant to use
+        */
+      let cmd = "";
+      let name = "";
+      let finalName = "";
+      let filesToSend = [];
+      request.files.forEach( (file) => {
+        name = file.originalname.trim();
+        // get rid of spaces and quotes in the file name
+        name = name.replace(/[\s'"]/g, "");
+        finalName = "./tmp/" + name;
+        cmd = "mv ./uploads/" + file.filename + " " + finalName;
+        filesToSend.push(name);
+        //console.log("trimed name is: " + name);
+        //console.log("using command: " + cmd);
+        exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            console.log(`error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+        }
+        //console.log(`stdout: ${stdout}`);
+        });
+    }
+    );
+   //console.log("/ask after search for files with filesToSend = " + filesToSend);
+   //console.log("/ask after search for files length of filesToSend = " + filesToSend.length);
+   if (filesToSend.length === 0){
+       filesToSend = "";
+   }
+
+   /* Found a thread, now send the thread, question, and images to the openai assistant */
+    if (request.files.length > 0){
+       console.log("/ask is ready to call the assistant.  filesToSend is " + filesToSend);
+    }
    let runPy = new Promise(function(success, nosuccess) {
 
     let assistant = "./ai_assistant.py";
-    const pyprog = spawn('python3',[assistant, quest, thread, thread_times, account, aType, thread_tid]);
+    //console.log("Calling ai_assistant with question: " + quest);
+    const pyprog = spawn('python3',[assistant, quest, thread, thread_times, account, aType, thread_tid, filesToSend]);
 
     pyprog.stdout.on('data', function(data) {
 
@@ -323,7 +375,7 @@ app.post('/ask', function(request, response){
         nosuccess(data);
     });
 }).then((rslt) =>{
-    //console.log("\n/ask received from python: \n\n" + rslt);
+    console.log("\n/ask received from python: \n\n" + rslt);
     // purify the result to ensure that there no XSS attack
     // We use dompurity and jsdom to perform the cleaning
     const newRslt = String.fromCharCode.apply(null, rslt);
@@ -333,8 +385,8 @@ app.post('/ask', function(request, response){
     //response.end(JSON.stringify(clean));
     response.end(JSON.stringify(newRslt));
   }).catch((e) => {
-      console.log("error: " + e);
-      response.end(JSON.stringify("none"));
+      console.log("/ask error from assistant: " + e);
+      response.end(JSON.stringify("assistant failed"));
   });
            //rslt = getAnswer(rows[0].thread, rows[0].thread_times);
            //console.log("Server side ask received: " + rslt);
@@ -648,39 +700,22 @@ app.post('/deletefiles', function(request, response){
 });
 
 app.post('/addfiles', upload.array("files"), function(request, response, next){
-    // const form = formidable({multiples: true});
-    //const form = new formidable.IncomingForm();
-    console.log("fields from multer:");
-    console.log(request.fields);
-    console.log("files from multer:");
-    console.log(request.files);
-    console.log("name of first file from multer:");
-    console.log(request.files[0].originalname);
+    //console.log("fields from multer:");
+    //console.log(request.fields);
+    //console.log("files from multer:");
+    //console.log(request.files);
+    //console.log("name of first file from multer:");
+    //console.log(request.files[0].originalname);
 
     let course = request.body.course;
     //let course = "";
-    console.log("/addfiles before parse, course = " + course);
+    //console.log("/addfiles before parse, course = " + course);
     //console.log("/addfiles, request.body:");
     //console.log(request.body);
     //console.log("/addfiles before parse, contentToAdd = " + contentToAdd);
 
     let ans = "success"
 
-    /*
-    form.parse(request, (err, fields, files) => {
-       if (err) {
-         next(err);
-         console.log("/addfiles got error from form.parse");
-         console.log(err);
-         ans = "fail";
-         return;
-       }
-       //res.json({ fields, files });
-       course = fields.course
-       name = fields.file1Name;
-       //contentToAdd = request.body.file1Content;
-     });
-     */
     response.header("Access-Control-Allow-Origin", "*");
     response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     response.writeHead(200, { 'Content-Type': 'application/json'});
@@ -705,7 +740,7 @@ app.post('/addfiles', upload.array("files"), function(request, response, next){
             console.log(`stderr: ${stderr}`);
             return;
         }
-        console.log(`stdout: ${stdout}`);
+        //console.log(`stdout: ${stdout}`);
         });
     }
     );
